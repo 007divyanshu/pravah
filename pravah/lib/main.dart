@@ -21,12 +21,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.dark(
           primary: const Color(0xFF003554), // Dark blue (Buttons, Containers)
-          secondary: Colors.greenAccent[400]!, // Accent Color
-          background: const Color(0xFF00263A), // Dark background
+          secondary: Colors.greenAccent[400]!, // Dark background
           surface: Colors.grey[850]!, // Card/Container background
           onPrimary: Colors.white, // Text on primary color
-          onSecondary: Colors.black, // Text on secondary color
-          onBackground: Colors.white, // Default text color
+          onSecondary: Colors.black, // Default text color
           onSurface: Colors.white, // Text on containers
         ),
         scaffoldBackgroundColor: const Color(0xFF00263A), // Global Background

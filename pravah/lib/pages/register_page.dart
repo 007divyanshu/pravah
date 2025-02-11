@@ -83,7 +83,7 @@ class _RegisterPageState extends State<RegisterPage> {
     double containerWidth = screenWidth * 0.85;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background, // Dark background
+      backgroundColor: Theme.of(context).colorScheme.surface, // Dark background
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -148,7 +148,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 // Sign-Up Button
 
-                MyButton(onTap: widget.onTap, text: 'Sign Up'),
+            MyButton(onTap: signUserUp, text: 'Sign Up'),
 
                 const SizedBox(height: 40),
 
