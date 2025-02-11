@@ -9,17 +9,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pravah/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
-  const RegisterPage({super.key, required this.onTap});
+  const RegisterPage({super.key, this.onTap});
 
   @override
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-
   final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -34,17 +32,19 @@ class _RegisterPageState extends State<RegisterPage> {
           usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
-        showCustomSnackbar(context, 'Please fill in all fields.', backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+        showCustomSnackbar(context, 'Please fill in all fields.',
+            backgroundColor: const Color.fromARGB(255, 57, 2, 2));
         return;
       }
 
       if (passwordController.text != confirmPasswordController.text) {
-        showCustomSnackbar(context, 'Passwords do not match.', backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+        showCustomSnackbar(context, 'Passwords do not match.',
+            backgroundColor: const Color.fromARGB(255, 57, 2, 2));
         return;
       }
 
       UserCredential userCredential =
-      await _auth.createUserWithEmailAndPassword(
+          await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
@@ -61,18 +61,21 @@ class _RegisterPageState extends State<RegisterPage> {
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );
-      showCustomSnackbar(context, 'Account created successfully!',backgroundColor:  Color.fromARGB(255, 2, 57, 24));
+      showCustomSnackbar(context, 'Account created successfully!',
+          backgroundColor: Color.fromARGB(255, 2, 57, 24));
     } catch (e) {
       String errorMessage = 'Error during registration. Please try again.';
       if (e is FirebaseAuthException) {
         if (e.code == 'email-already-in-use') {
-          errorMessage = 'Email is already in use. Please use a different email.';
+          errorMessage =
+              'Email is already in use. Please use a different email.';
         } else {
           errorMessage = e.message ?? 'An error occurred.';
         }
       }
 
-      showCustomSnackbar(context, errorMessage, backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+      showCustomSnackbar(context, errorMessage,
+          backgroundColor: const Color.fromARGB(255, 57, 2, 2));
     }
   }
 
@@ -84,6 +87,16 @@ class _RegisterPageState extends State<RegisterPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -187,7 +200,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
               ],
             ),

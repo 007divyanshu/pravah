@@ -14,9 +14,10 @@ class HomePage extends StatelessWidget {
   void signUserOut(BuildContext context) async {
     await _auth.signOut();
     showCustomSnackbar(
-        context,"Signed out successfully!",
-        backgroundColor:  Color.fromARGB(255, 2, 57, 24),
-      );
+      context,
+      "Signed out successfully!",
+      backgroundColor: Color.fromARGB(255, 2, 57, 24),
+    );
   }
 
   @override
@@ -26,20 +27,20 @@ class HomePage extends StatelessWidget {
     if (user == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCustomSnackbar(
-        context,"No user signed in!",
-        backgroundColor: const Color.fromARGB(255, 57, 2, 2),
-      );
+          context,
+          "No user signed in!",
+          backgroundColor: const Color.fromARGB(255, 57, 2, 2),
+        );
       });
     }
 
     return Scaffold(
-      appBar:CustomAppBar(title: 'Home'),
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: CustomAppBar(title: 'Home'),
       drawer: CustomDrawer(),
       body: Center(
         child: Text(
-          user != null
-              ? "LOGGED IN AS: ${user.email!}"
-              : "No user logged in!",
+          user != null ? "LOGGED IN AS: ${user.email!}" : "No user logged in!",
           style: const TextStyle(fontSize: 20),
         ),
       ),

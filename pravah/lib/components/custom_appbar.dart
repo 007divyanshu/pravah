@@ -4,16 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pravah/components/custom_dialog.dart';
 import 'package:pravah/components/custom_snackbar.dart';
-import 'package:pravah/pages/login_page.dart';
+import 'package:pravah/pages/chatbot.dart';
+import 'package:pravah/pages/notification_page.dart';
+import 'package:pravah/pages/register_page.dart';
 
-// Function to handle sign-out logic (Avoids duplication)
 void signUserOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
-  Navigator.pop(context); // Close drawer or previous screens
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => LoginPage()),
-  );
+  Navigator.pop(context);
   showCustomSnackbar(
     context,
     "Signed out successfully!",
@@ -23,7 +20,7 @@ void signUserOut(BuildContext context) async {
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  CustomAppBar({required this.title});
+  const CustomAppBar({required this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -53,20 +50,39 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
       // Scan, Chatbot, and Notification Icons
       actions: [
-        IconButton(
-          icon: const Icon(Icons.camera),
-          onPressed: () {},
-          color: Theme.of(context).colorScheme.primary,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: IconButton(
+            icon: const Icon(Icons.camera),
+            onPressed: () {},
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.chat),
-          onPressed: () {},
-          color: Theme.of(context).colorScheme.primary,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: IconButton(
+            icon: const Icon(Icons.chat_bubble),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => Chatbot()),
+              );
+            },
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
-        IconButton(
-          icon: const Icon(Icons.notifications),
-          onPressed: () {},
-          color: Theme.of(context).colorScheme.primary,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => NotificationPage()),
+              );
+            },
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
       ],
     );
@@ -111,7 +127,7 @@ class CustomDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => LoginPage()),
+                MaterialPageRoute(builder: (context) => RegisterPage()),
               );
             },
           ),
