@@ -6,8 +6,8 @@ import 'package:pravah/components/custom_appbar.dart';
 import 'package:pravah/components/custom_navbar.dart';
 import 'package:pravah/components/custom_snackbar.dart';
 
-class HomePage extends StatelessWidget {
-  HomePage({super.key});
+class TrackPage extends StatelessWidget {
+  TrackPage({super.key});
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -37,7 +37,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: CustomAppBar(title: 'Home'),
+      appBar: CustomAppBar(title: 'Track'),
       drawer: CustomDrawer(),
       body: Center(
         child: Text(
@@ -45,7 +45,7 @@ class HomePage extends StatelessWidget {
           style: const TextStyle(fontSize: 20),
         ),
       ),
-      bottomNavigationBar: BottomNavBar(selectedIndex: 0),
+      bottomNavigationBar: BottomNavBar(selectedIndex: 1),
     );
   }
 }

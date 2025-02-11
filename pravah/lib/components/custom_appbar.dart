@@ -4,22 +4,31 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pravah/components/custom_dialog.dart';
 import 'package:pravah/components/custom_snackbar.dart';
+import 'package:pravah/pages/auth_page.dart';
 import 'package:pravah/pages/chatbot.dart';
+import 'package:pravah/pages/home_page.dart';
 import 'package:pravah/pages/notification_page.dart';
-import 'package:pravah/pages/register_page.dart';
 
 void signUserOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
-  Navigator.pop(context);
-  showCustomSnackbar(
-    context,
-    "Signed out successfully!",
-    backgroundColor: const Color.fromARGB(255, 2, 57, 24),
-  );
+  if (context.mounted) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+      (route) => false, // Removes all previous routes
+    );
+    showCustomSnackbar(
+      context,
+      "Signed out successfully!",
+      backgroundColor: const Color.fromARGB(255, 2, 57, 24),
+    );
+  }
 }
 
+// Custom App Bar
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+
   const CustomAppBar({required this.title});
 
   @override
@@ -35,7 +44,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Theme.of(context).colorScheme.onPrimary,
       centerTitle: true,
       elevation: 0,
-
       leading: Builder(
         builder: (context) {
           return IconButton(
@@ -47,8 +55,6 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           );
         },
       ),
-
-      // Scan, Chatbot, and Notification Icons
       actions: [
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -76,7 +82,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           child: IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => NotificationPage()),
               );
@@ -92,13 +98,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
 
+// Custom Drawer
 class CustomDrawer extends StatelessWidget {
+  final VoidCallback? onTap; // Function to toggle login/register
+
+  const CustomDrawer({this.onTap, super.key});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
+          // Drawer Header
           DrawerHeader(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.onPrimary,
@@ -108,29 +120,38 @@ class CustomDrawer extends StatelessWidget {
               style: TextStyle(
                 color: Theme.of(context).colorScheme.primary,
                 fontSize: 24,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
+
+          // Location
           ListTile(
             leading: const Icon(Icons.location_city),
             title: const Text('Location'),
             onTap: () {},
           ),
+
+          // Profile
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {},
           ),
+
+          // Toggle Login/Register
           ListTile(
-            leading: const Icon(Icons.add),
-            title: const Text('Create Account'),
+            leading: const Icon(Icons.swap_horiz),
+            title: const Text('Login / Register'),
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => RegisterPage()),
+                MaterialPageRoute(builder: (context) => AuthPage()),
               );
             },
           ),
+
+          // Logout
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
@@ -148,6 +169,8 @@ class CustomDrawer extends StatelessWidget {
               );
             },
           ),
+
+          // Delete Account
           ListTile(
             leading: const Icon(Icons.delete),
             title: const Text('Delete Account'),

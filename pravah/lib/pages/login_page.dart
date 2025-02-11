@@ -10,7 +10,7 @@ import 'package:pravah/components/custom_snackbar.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
-  const LoginPage({super.key, this.onTap});
+  const LoginPage({super.key, required this.onTap});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -21,42 +21,45 @@ class _LoginPageState extends State<LoginPage> {
   final passwordController = TextEditingController();
 
   Future<void> signUserIn() async {
-  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-    showCustomSnackbar(context, 'Please fill in all fields.', backgroundColor: const Color.fromARGB(255, 57, 2, 2));
-    return;
-  }
-
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: emailController.text.trim(),
-      password: passwordController.text.trim(),
-    );
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomePage()),
-    );
-    showCustomSnackbar(context, "Logged in successfully!",backgroundColor: const Color.fromARGB(255, 2, 57, 24));
-  } on FirebaseAuthException catch (e) {
-    String errorMessage = 'Login failed. Please try again.';
-
-    if (e.code == 'user-not-found') {
-      errorMessage = 'No account found with this email.';
-    } else if (e.code == 'wrong-password') {
-      errorMessage = 'Incorrect password. Please try again.';
-    } else if (e.code == 'invalid-email') {
-      errorMessage = 'Invalid email format.';
-    } else if (e.code == 'user-disabled') {
-      errorMessage = 'This account has been disabled.';
-    } else if (e.code == 'too-many-requests') {
-      errorMessage = 'Too many attempts. Please try again later.';
-    } else {
-      errorMessage = e.message ?? 'An unexpected error occurred.';
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      showCustomSnackbar(context, 'Please fill in all fields.',
+          backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+      return;
     }
 
-    showCustomSnackbar(context, errorMessage,backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()),
+      );
+      showCustomSnackbar(context, "Logged in successfully!",
+          backgroundColor: const Color.fromARGB(255, 2, 57, 24));
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Login failed. Please try again.';
+
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No account found with this email.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect password. Please try again.';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email format.';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'This account has been disabled.';
+      } else if (e.code == 'too-many-requests') {
+        errorMessage = 'Too many attempts. Please try again later.';
+      } else {
+        errorMessage = e.message ?? 'An unexpected error occurred.';
+      }
+
+      showCustomSnackbar(context, errorMessage,
+          backgroundColor: const Color.fromARGB(255, 57, 2, 2));
+    }
   }
-}
 
   //user interface
   @override
@@ -66,13 +69,22 @@ class _LoginPageState extends State<LoginPage> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            );
+          },
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 const SizedBox(height: 40),
 
                 //welcome container
@@ -105,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 const SizedBox(height: 10),
-                
+
                 //password
                 MyTextField(
                   controller: passwordController,
@@ -129,12 +141,12 @@ class _LoginPageState extends State<LoginPage> {
                 ),
 
                 const SizedBox(height: 10),
-                
+
                 //login
                 MyButton(onTap: signUserIn, text: 'Log In'),
 
                 const SizedBox(height: 25),
-                
+
                 //register here
                 Container(
                   width: containerWidth,
