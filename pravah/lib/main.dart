@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:pravah/pages/auth_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:pravah/pages/home_page.dart';
 import 'firebase_options.dart';
 
+
+//firebaese binding
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -18,49 +20,31 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+
+      //global theme
       theme: ThemeData(
         colorScheme: ColorScheme.dark(
-          primary: const Color(0xFF003554), // Dark blue (Buttons, Containers)
-          secondary: Colors.greenAccent[400]!, // Dark background
-          surface: Colors.grey[850]!, // Card/Container background
-          onPrimary: Colors.white, // Text on primary color
-          onSecondary: Colors.black, // Default text color
-          onSurface: Colors.white, // Text on containers
+          primary: const Color.fromARGB(255, 0, 48, 72), 
+          secondary: Color.fromARGB(255, 16, 197, 88), 
+          surface: Color.fromARGB(255, 2, 37, 55),
+          onPrimary: Color.fromARGB(255, 250, 249, 233),
+          onSecondary: Color.fromARGB(255, 250, 249, 233), 
+          onSurface: Color.fromARGB(255, 250, 249, 233), 
         ),
-        scaffoldBackgroundColor: const Color(0xFF00263A), // Global Background
+        scaffoldBackgroundColor:const Color.fromARGB(255, 0, 48, 72), 
         fontFamily: 'Montserrat', // Apply globally
         textTheme: TextTheme(
           bodyLarge: GoogleFonts.montserrat(color: Colors.white),
           bodyMedium: GoogleFonts.montserrat(color: Colors.white70),
           bodySmall: GoogleFonts.montserrat(color: Colors.white60),
         ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.grey[200], // Light grey input fields
-          hintStyle: GoogleFonts.montserrat(color: Colors.grey),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.white),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: Colors.greenAccent[400]!),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF003554), // Button color
-            foregroundColor: Colors.white, // Text color
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-          ),
-        ),
+        
       ),
       debugShowCheckedModeBanner: false,
-      home: const AuthPage(),
+
+      //dashboard
+      home: HomePage(),
+      
     );
   }
 }

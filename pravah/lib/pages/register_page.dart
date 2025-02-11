@@ -1,10 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:pravah/components/custom_snackbar.dart';
 import 'package:pravah/components/my_button.dart';
 import 'package:pravah/components/my_textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pravah/pages/home_page.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -15,7 +19,7 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  // Controllers
+
   final emailController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
@@ -23,23 +27,19 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  // Register user
+  // Register user method
   Future<void> signUserUp() async {
     try {
       if (emailController.text.isEmpty ||
           usernameController.text.isEmpty ||
           passwordController.text.isEmpty ||
           confirmPasswordController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please fill in all fields.')),
-        );
+        showCustomSnackbar(context, 'Please fill in all fields.', backgroundColor: const Color.fromARGB(255, 57, 2, 2));
         return;
       }
 
       if (passwordController.text != confirmPasswordController.text) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passwords do not match.')),
-        );
+        showCustomSnackbar(context, 'Passwords do not match.', backgroundColor: const Color.fromARGB(255, 57, 2, 2));
         return;
       }
 
@@ -61,6 +61,7 @@ class _RegisterPageState extends State<RegisterPage> {
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );
+      showCustomSnackbar(context, 'Account created successfully!',backgroundColor:  Color.fromARGB(255, 2, 57, 24));
     } catch (e) {
       String errorMessage = 'Error during registration. Please try again.';
       if (e is FirebaseAuthException) {
@@ -71,19 +72,18 @@ class _RegisterPageState extends State<RegisterPage> {
         }
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      showCustomSnackbar(context, errorMessage, backgroundColor: const Color.fromARGB(255, 57, 2, 2));
     }
   }
 
+  //user interface
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double containerWidth = screenWidth * 0.85;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface, // Dark background
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -120,6 +120,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   hintText: 'Email',
                   obscureText: false,
                 ),
+
                 const SizedBox(height: 10),
 
                 // Username
@@ -128,6 +129,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   hintText: 'Username',
                   obscureText: false,
                 ),
+
                 const SizedBox(height: 10),
 
                 // Password
@@ -136,6 +138,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   hintText: 'Password',
                   obscureText: true,
                 ),
+
                 const SizedBox(height: 10),
 
                 // Confirm Password
@@ -144,15 +147,15 @@ class _RegisterPageState extends State<RegisterPage> {
                   hintText: 'Confirm Password',
                   obscureText: true,
                 ),
+
                 const SizedBox(height: 25),
 
                 // Sign-Up Button
+                MyButton(onTap: signUserUp, text: 'Sign Up'),
 
-            MyButton(onTap: signUserUp, text: 'Sign Up'),
+                const SizedBox(height: 25),
 
-                const SizedBox(height: 40),
-
-                // Footer Container
+                //Login here Container
                 Container(
                   width: containerWidth,
                   padding: const EdgeInsets.symmetric(vertical: 20),
@@ -184,6 +187,8 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ),
                 ),
+                
+                const SizedBox(height: 40),
               ],
             ),
           ),
