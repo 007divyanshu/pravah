@@ -7,7 +7,9 @@ import 'package:pravah/components/custom_snackbar.dart';
 import 'package:pravah/pages/auth_page.dart';
 import 'package:pravah/pages/chatbot.dart';
 import 'package:pravah/pages/home_page.dart';
+import 'package:pravah/pages/location_page.dart';
 import 'package:pravah/pages/notification_page.dart';
+import 'package:pravah/pages/profile_page.dart';
 
 void signUserOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
@@ -127,16 +129,26 @@ class CustomDrawer extends StatelessWidget {
 
           // Location
           ListTile(
-            leading: const Icon(Icons.location_city),
+            leading: const Icon(Icons.location_on_outlined),
             title: const Text('Location'),
-            onTap: () {},
+            onTap: () {
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LocationPage())
+              );
+            },
           ),
 
           // Profile
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
-            onTap: () {},
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => ProfilePage())
+              );
+            },
           ),
 
           // Toggle Login/Register
