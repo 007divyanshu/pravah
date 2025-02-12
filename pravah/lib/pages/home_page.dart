@@ -1,11 +1,10 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:pravah/components/custom_appbar.dart';
 import 'package:pravah/components/custom_navbar.dart';
 import 'package:pravah/components/custom_snackbar.dart';
+import 'package:pravah/components/loader.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({super.key});
@@ -18,6 +17,7 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   User? user;
   String? username;
+  bool isLoading = true; // Loader state
 
   @override
   void initState() {
@@ -26,11 +26,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   void fetchUserData() async {
+    setState(() {
+      isLoading = true; // Show loader
+    });
+
     user = _auth.currentUser;
 
     if (user != null) {
       try {
-        // Fetch the username from Firestore using the user's UID
+        // Fetch username from Firestore
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user!.uid)
@@ -38,14 +42,22 @@ class _HomePageState extends State<HomePage> {
 
         setState(() {
           username = userDoc.get('username');
+          isLoading = false; // Stop loader after data is fetched
         });
       } catch (e) {
+        setState(() {
+          isLoading = false; // Stop loader on error
+        });
         showCustomSnackbar(
           context,
           "Failed to fetch username.",
           backgroundColor: const Color.fromARGB(255, 57, 2, 2),
         );
       }
+    } else {
+      setState(() {
+        isLoading = false; // Stop loader if no user
+      });
     }
   }
 
@@ -60,24 +72,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if (user == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCustomSnackbar(
-          context,
-          "No user signed in!",
-          backgroundColor: const Color.fromARGB(255, 57, 2, 2),
-        );
-      });
-    }
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CustomAppBar(title: 'Home'),
       drawer: CustomDrawer(),
-      body: Center(
+      body: isLoading
+          ? const LoaderPage() // Display loader while loading
+          : Center(
         child: Text(
           user != null
-              ? "LOGGED IN AS: ${user!.email!}\nUsername: ${username!}"
+              ? "LOGGED IN AS: ${user!.email!}\nUsername: ${username ?? 'Loading...'}"
               : "No user logged in!",
           style: const TextStyle(fontSize: 20),
           textAlign: TextAlign.center,
