@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_const_constructors_in_immutables, library_private_types_in_public_api, use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -79,14 +81,14 @@ class _HomePageState extends State<HomePage> {
       body: isLoading
           ? const LoaderPage() // Display loader while loading
           : Center(
-        child: Text(
-          user != null
-              ? "LOGGED IN AS: ${user!.email!}\nUsername: ${username ?? 'Loading...'}"
-              : "No user logged in!",
-          style: const TextStyle(fontSize: 20),
-          textAlign: TextAlign.center,
-        ),
-      ),
+              child: Text(
+                user != null
+                    ? "LOGGED IN AS: ${user!.email!}\nUsername: ${username ?? 'Loading...'}"
+                    : "No user logged in!",
+                style: const TextStyle(fontSize: 20),
+                textAlign: TextAlign.center,
+              ),
+            ),
       bottomNavigationBar: BottomNavBar(selectedIndex: 0),
     );
   }
