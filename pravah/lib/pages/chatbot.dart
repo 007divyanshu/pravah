@@ -20,6 +20,10 @@ class _ChatbotState extends State<Chatbot> {
   final List<Map<String, String>> _messages = [];
   late final Gemini _gemini;
 
+  // Dark blue and cream theme colors
+  final Color darkBlue = const Color(0xFF0B2732);
+  final Color cream = const Color(0xFFF5F5DC);
+
   @override
   void initState() {
     super.initState();
@@ -64,9 +68,9 @@ class _ChatbotState extends State<Chatbot> {
     try {
       // Combine validation and response generation in a single request
       final response = await _gemini.text(
-        "If the following question is related to renewable or green energy generation (solar, wind, hydro, geothermal, biomass, etc.), provide an informative answer. "
-        "If not, reply with 'I only discuss green energy topics. 🌱 Try asking about renewable energy!'\n\n"
-        "User Question: $userMessage"
+          "If the following question is related to renewable or green energy generation (solar, wind, hydro, geothermal, biomass, etc.), provide an informative answer. "
+              "If not, reply with 'I only discuss green energy topics. 🌱 Try asking about renewable energy!'\n\n"
+              "User Question: $userMessage"
       );
 
       if (response?.output != null) {
@@ -125,10 +129,16 @@ class _ChatbotState extends State<Chatbot> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: darkBlue, // Dark blue background
       appBar: AppBar(
-        title: const Text('Eco-Friendly Chatbot'),
+        backgroundColor: darkBlue, // Dark blue AppBar
+        title: Text(
+          'Eco-Friendly Chatbot',
+          style: TextStyle(color: cream), // Cream text color
+        ),
+        iconTheme: IconThemeData(color: cream), // Cream icon color
         leading: BackButton(
+          color: cream, // Cream back button color
           onPressed: () {
             Navigator.pushReplacement(
               context,
@@ -137,63 +147,76 @@ class _ChatbotState extends State<Chatbot> {
           },
         ),
       ),
-      body: user == null
-          ? const Center(
-              child: Text(
-                "No user logged in!",
-                style: TextStyle(fontSize: 20),
-              ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(10),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      final message = _messages[index];
-                      final isUser = message["role"] == "user";
-                      return Align(
-                        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isUser ? Colors.blue[300] : Colors.green[300],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            message["text"]!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: "Ask about green energy...",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              color: darkBlue, // Dark blue background for chat area
+              child: ListView.builder(
+                padding: const EdgeInsets.all(10),
+                itemCount: _messages.length,
+                itemBuilder: (context, index) {
+                  final message = _messages[index];
+                  final isUser = message["role"] == "user";
+                  return Align(
+                    alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isUser ? const Color(0xFF1E4D5F) : cream, // Dark blue for user, cream for bot
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.send, color: Colors.green),
-                        onPressed: sendMessage,
+                      child: Text(
+                        message["text"]!,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isUser ? cream : darkBlue, // Cream text on dark blue, dark blue text on cream
+                        ),
                       ),
                     ),
-                    // Handle the "Enter" key press
-                    onSubmitted: (value) {
-                      sendMessage();
-                    },
-                  ),
-                ),
-              ],
+                  );
+                },
+              ),
             ),
+          ),
+          Container(
+            color: darkBlue, // Dark blue background for input area
+            padding: const EdgeInsets.all(10),
+            child: TextField(
+              controller: _controller,
+              style: TextStyle(color: cream), // Cream text color for input
+              decoration: InputDecoration(
+                hintText: "Ask about green energy...",
+                hintStyle: TextStyle(color: cream.withOpacity(0.7)), // Semi-transparent cream for hint
+                filled: true,
+                fillColor: darkBlue.withOpacity(0.5), // Slightly lighter dark blue
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(color: cream), // Cream border
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(color: cream), // Cream border
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  borderSide: BorderSide(color: cream), // Cream border
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.send, color: cream), // Cream icon color
+                  onPressed: sendMessage,
+                ),
+              ),
+              // Handle the "Enter" key press
+              onSubmitted: (value) {
+                sendMessage();
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

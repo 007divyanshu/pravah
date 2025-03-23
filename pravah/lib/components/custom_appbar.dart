@@ -2,6 +2,7 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:pravah/components/custom_dialog.dart';
 import 'package:pravah/components/custom_snackbar.dart';
 import 'package:pravah/pages/auth_page.dart';
@@ -10,6 +11,32 @@ import 'package:pravah/pages/home_page.dart';
 import 'package:pravah/pages/location_page.dart';
 import 'package:pravah/pages/notification_page.dart';
 import 'package:pravah/pages/profile_page.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
+import 'package:pravah/pages/solution_page.dart';
+
+final ImagePicker _picker = ImagePicker();
+File? capturedImage;
+
+Future<void> scanResult(BuildContext context) async {
+  final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+  if (pickedFile != null) {
+    capturedImage = File(pickedFile.path);
+
+    // Navigate directly to SolutionPage without Firebase upload
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SolutionPage(imageUrl: capturedImage!.path),
+      ),
+    );
+  } else {
+    print('No image selected.');
+  }
+}
+
 
 void signUserOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
@@ -17,7 +44,7 @@ void signUserOut(BuildContext context) async {
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => HomePage()),
-      (route) => false, // Removes all previous routes
+          (route) => false, // Removes all previous routes
     );
     showCustomSnackbar(
       context,
@@ -29,22 +56,19 @@ void signUserOut(BuildContext context) async {
 
 // Custom App Bar
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
+  final Widget title;
 
   const CustomAppBar({required this.title});
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        title,
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
+      title: Align(
+        alignment: Alignment.centerLeft, // Ensures left alignment
+        child: title
       ),
       backgroundColor: Theme.of(context).colorScheme.onPrimary,
-      centerTitle: true,
+      centerTitle: false, // Explicitly make title left-aligned
       elevation: 0,
       leading: Builder(
         builder: (context) {
@@ -62,7 +86,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.all(8.0),
           child: IconButton(
             icon: const Icon(Icons.camera),
-            onPressed: () {},
+            onPressed: () => scanResult(context),
             color: Theme.of(context).colorScheme.primary,
           ),
         ),
@@ -73,7 +97,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => Chatbot()),
+                MaterialPageRoute(builder: (context) => const Chatbot()),
               );
             },
             color: Theme.of(context).colorScheme.primary,
@@ -86,7 +110,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => NotificationPage()),
+                MaterialPageRoute(builder: (context) => const NotificationPage()),
               );
             },
             color: Theme.of(context).colorScheme.primary,
@@ -95,6 +119,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ],
     );
   }
+
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -106,13 +131,27 @@ class CustomDrawer extends StatelessWidget {
 
   const CustomDrawer({this.onTap, super.key});
 
+  void _openLocationPage(BuildContext context) async {
+    LatLng defaultLocation = const LatLng(28.6139, 77.2090); // Default to New Delhi
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const LocationPage(),
+      ),
+    );
+
+    if (result is LatLng) {
+      print("Selected Location: ${result.latitude}, ${result.longitude}");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Drawer Header
           DrawerHeader(
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.onPrimary,
@@ -126,44 +165,33 @@ class CustomDrawer extends StatelessWidget {
               ),
             ),
           ),
-
-          // Location
           ListTile(
             leading: const Icon(Icons.location_on_outlined),
             title: const Text('Location'),
             onTap: () {
-              Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LocationPage())
-              );
+              _openLocationPage(context);
             },
           ),
-
-          // Profile
           ListTile(
             leading: const Icon(Icons.person),
             title: const Text('Profile'),
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => ProfilePage())
+                MaterialPageRoute(builder: (context) => const ProfilePage()),
               );
             },
           ),
-
-          // Toggle Login/Register
           ListTile(
             leading: const Icon(Icons.swap_horiz),
             title: const Text('Login / Register'),
             onTap: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => AuthPage()),
+                MaterialPageRoute(builder: (context) => const AuthPage()),
               );
             },
           ),
-
-          // Logout
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text('Logout'),
@@ -181,12 +209,9 @@ class CustomDrawer extends StatelessWidget {
               );
             },
           ),
-
-          // Delete Account
-          ListTile(
-            leading: const Icon(Icons.delete),
-            title: const Text('Delete Account'),
-            onTap: () {},
+          const ListTile(
+            leading: Icon(Icons.delete),
+            title: Text('Delete Account'),
           ),
         ],
       ),
