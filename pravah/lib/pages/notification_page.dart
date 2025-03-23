@@ -24,6 +24,34 @@ class _NotificationPageState extends State<NotificationPage> {
           },
         ),
       ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.notifications_active,
+              size: 80,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            SizedBox(height: 20),
+            Text(
+              'This feature is coming soon!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              'We\'re working hard to bring you notifications.',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

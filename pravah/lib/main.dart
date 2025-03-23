@@ -3,15 +3,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:pravah/pages/home_page.dart';
+import 'package:pravah/pages/location_page.dart';
 import 'firebase_options.dart';
+
+String globalCarbonFootprint = '0.0';
+String globaldailySolar = '0.0';
+String globaldailyWind = '0.0';
+String globaldailyBiomass = '0.0';
+String globaldailyGeothermal = '0.0';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Load .env file
   await dotenv.load(fileName: ".env");
   print('.env file loaded successfully');
-  
+
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,

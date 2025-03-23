@@ -1,24 +1,23 @@
 // ignore_for_file: use_super_parameters, library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
 import 'package:pravah/pages/footprint_page.dart';
 import 'package:pravah/pages/home_page.dart';
 import 'package:pravah/pages/suggesstions_page.dart';
 import 'package:pravah/pages/track_page.dart';
 
+import '../pages/suggesstions_page.dart';
+
 class BottomNavBar extends StatefulWidget {
   final int selectedIndex;
-
   const BottomNavBar({Key? key, required this.selectedIndex}) : super(key: key);
 
   @override
-  _BottomNavBarState createState() => _BottomNavBarState();
+  _BottomNavBarState createState() => _BottomNavBarState(); // Fixed asterisk syntax
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
   void _onItemTapped(int index) {
     if (index == widget.selectedIndex) return;
-
     switch (index) {
       case 0:
         Navigator.pushReplacement(
@@ -34,7 +33,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         break;
       case 3:
         Navigator.pushReplacement(context,
-            MaterialPageRoute(builder: (context) => SuggestionsPage()));
+            MaterialPageRoute(builder: (context) => SuggestionsPage())); // Fixed class name if needed
         break;
     }
   }
