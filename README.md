@@ -2,13 +2,13 @@
 
 Pravah is an innovative mobile application designed to revolutionize rural development through AI-powered resource allocation and sustainable energy management. The app leverages Google's Gemini AI to provide intelligent recommendations for renewable energy adoption, optimize resource utilization, and promote sustainable practices in rural communities.
 
-Through its intuitive interface, Pravah offers real-time data analytics, location-based energy predictions, and sustainable waste management solutions. The integration of Google's Gemma and Gemini AI enables precise predictions for renewable energy potential and provides personalized sustainability guidance, making it an essential tool for rural communities to embrace clean energy alternatives.
+Through its intuitive interface, Pravah offers real-time data analytics, location-based energy predictions, and sustainable waste management solutions. The integration of Google's Gemini AI enables precise predictions for renewable energy potential and provides personalized sustainability guidance, making it an essential tool for rural communities to embrace clean energy alternatives.
 
 Built with Flutter for cross-platform functionality, Firebase for robust backend services, and Gemini AI for intelligent analysis, Pravah provides an intuitive platform for rural communities to embrace sustainable development and contribute to environmental conservation.
 
 ## Features
 
-- **AI-Powered Energy Prediction**: Uses Gemma to predict optimal renewable energy sources (solar, wind) based on location-specific data
+- **AI-Powered Energy Prediction**: Uses Gemini to predict optimal renewable energy sources (solar, wind) based on location-specific data
 - **Real-Time Energy Monitoring**: Tracks daily energy generation, savings, and carbon footprint reduction
 - **Sustainable Waste Management**: AI-driven image
   analysis for customized waste processing suggestions.
@@ -21,7 +21,6 @@ Built with Flutter for cross-platform functionality, Firebase for robust backend
 | --------------- | --------------------------------------------- |
 | Flutter         | Cross-platform mobile application development |
 | Firebase        | Authentication and data management            |
-| Gemma AI        | Location-based energy prediction              |
 | Gemini AI       | Chatbot and waste management solutions        |
 | Google Maps API | Location services and geospatial analysis     |
 | OpenWeather API | Real-time weather data for energy predictions |
