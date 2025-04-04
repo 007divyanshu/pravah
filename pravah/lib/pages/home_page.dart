@@ -23,6 +23,14 @@ import 'package:pravah/main.dart';
 import 'track_page.dart';
 import 'biomass_setup_page.dart';
 import 'geothermal_setup_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Add these at the top level of your file, outside any class
+String globaldailySolar = "0.0 kWh";
+String globaldailyWind = "0.0 kWh";
+String globaldailyBiomass = "0.0 kWh";
+String globaldailyGeothermal = "0.0 kWh";
+double globalCarbonFootprint = 0.0;
 
 
 class HomePage extends StatefulWidget {
@@ -42,6 +50,7 @@ class _HomePageState extends State<HomePage> {
   Map<String, double>? currentLocation; // For raw coordinates
   String city = "Ghaziabad"; // Default city
   double temperature = 25.0; // Default temperature
+  Widget? recommendationWidget;
 
   // Selected location details
   String? selectedLocationName;
@@ -49,55 +58,204 @@ class _HomePageState extends State<HomePage> {
   LatLng? selectedCoordinates;
   bool isLoadingLocation = false;
   bool isLoadingWeather = false;
-  String weatherCondition = "Sunny"; // Default weather condition
+  String weatherCondition = "Sunny";
+  final geminiApiKey=dotenv.env['AI_API_KEY'];
 
   @override
   void initState() {
     super.initState();
     fetchUserData();
+    _restoreSelectedLocation();
+    Future.delayed(Duration.zero, () {
+      if (_auth.currentUser != null) {
+        loadUserRecommendation(context, _auth.currentUser!.uid);
+      }
+    });
+  }
 
-    // Handle provided location if any
-    if (widget.selectedLocation != null) {
-      _processSelectedLocation(widget.selectedLocation!);
-    } else {
-      _requestLocationPermission(); // Get current location if no location provided
+  Future<String> generateEnergyRecommendation(Map<String, dynamic> userData) async {
+    final Uri url = Uri.parse(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=$geminiApiKey"
+    );
+
+    // Extract relevant data from user data (whether from Firebase or local storage)
+    final String location = userData['selectedLocation'] ?? "Unknown Location";
+
+    // Handle coordinates which could be a GeoPoint or a Map
+    double latitude = 0.0;
+    double longitude = 0.0;
+    if (userData['coordinates'] != null) {
+      if (userData['coordinates'] is GeoPoint) {
+        final GeoPoint geoPoint = userData['coordinates'];
+        latitude = geoPoint.latitude;
+        longitude = geoPoint.longitude;
+      } else if (userData['coordinates'] is Map) {
+        latitude = userData['coordinates']['latitude'] ?? 0.0;
+        longitude = userData['coordinates']['longitude'] ?? 0.0;
+      } else if (userData['coordinates'] is String) {
+        // Parse from string if saved that way in preferences
+        final coordStr = userData['coordinates'] as String;
+        final regex = RegExp(r'(\d+\.\d+)° N, (\d+\.\d+)° E');
+        final match = regex.firstMatch(coordStr);
+        if (match != null) {
+          latitude = double.tryParse(match.group(1) ?? '0') ?? 0.0;
+          longitude = double.tryParse(match.group(2) ?? '0') ?? 0.0;
+        }
+      }
+    }
+
+    final double bladeLength = userData['bladeLength50']?.toDouble() ?? 0.0;
+    final double solarPanelArea = userData['solarPanelArea']?.toDouble() ?? 0.0;
+    final double solarEfficiency = userData['solarPanelEfficiency']?.toDouble() ?? 0.0;
+    final double windEfficiency = userData['windEfficiency']?.toDouble() ?? 0.0;
+
+    // Create prompt with the available data
+    final String prompt = """
+  Based on the following data, determine whether "solarpanels" or "smallwindturbine" would be the better renewable energy option.
+  
+  Location: $location
+  Coordinates: $latitude° N, $longitude° E
+  Available blade length for wind turbine: $bladeLength
+  Available area for solar panels: $solarPanelArea
+  Solar panel efficiency rating: $solarEfficiency
+  Wind turbine efficiency rating: $windEfficiency
+  
+  Respond with ONLY ONE of these exact words (no additional text):
+  - solarpanels
+  - smallwindturbine
+  """;
+
+    Map<String, dynamic> requestBody = {
+      "contents": [
+        {
+          "role": "user",
+          "parts": [
+            {
+              "text": prompt
+            }
+          ]
+        }
+      ]
+    };
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+        String recommendation = jsonResponse["candidates"]?[0]["content"]?["parts"]?[0]["text"] ?? "solarpanels";
+
+        // Clean up any extra spaces, line breaks or capitalization
+        recommendation = recommendation.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '');
+
+        // Validate it's one of our allowed values
+        if (recommendation != "solarpanels" && recommendation != "smallwindturbine") {
+          recommendation = "solarpanels"; // Default if model returns unexpected response
+        }
+
+        return recommendation;
+      } else {
+        return "solarpanels"; // Default on error
+      }
+    } catch (e) {
+      return "solarpanels"; // Default on exception
     }
   }
 
+  // Function to load user data either from Firebase or local storage
+  Future<Map<String, dynamic>> getUserData(String userId) async {
+    // Try loading from shared preferences first
+    final prefs = await SharedPreferences.getInstance();
+    final String? userData = prefs.getString('user_energy_data');
+
+    if (userData != null) {
+      // User data exists in local storage
+      return jsonDecode(userData) as Map<String, dynamic>;
+    } else {
+      // Try loading from Firebase if local data doesn't exist
+      try {
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+
+        if (userDoc.exists) {
+          final data = userDoc.data() as Map<String, dynamic>;
+          // Save to local storage for future use
+          await prefs.setString('user_energy_data', jsonEncode(data));
+          return data;
+        } else {
+          throw Exception("User data not found");
+        }
+      } catch (e) {
+        // Return default values if both options fail
+        return {
+          'selectedLocation': 'Unknown Location',
+          'coordinates': {'latitude': 0.0, 'longitude': 0.0},
+          'bladeLength50': 0.0,
+          'solarPanelArea': 0.0,
+          'solarPanelEfficiency': 0.0,
+          'windEfficiency': 0.0,
+        };
+      }
+    }
+  }
+
+
+// Restore location from SharedPreferences
+  Future<void> _restoreSelectedLocation() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    double? lat = prefs.getDouble('selected_lat');
+    double? lng = prefs.getDouble('selected_lng');
+    String? name = prefs.getString('selected_name');
+
+    if (lat != null && lng != null && name != null) {
+      setState(() {
+        selectedCoordinates = LatLng(lat, lng);
+        selectedLocationName = name;
+      });
+
+      await _getNearestLocation(lat, lng);
+      await _getWeatherForLocation(lat, lng);
+    } else {
+      _requestLocationPermission(); // Get current location only if no stored location
+    }
+  }
+
+
+
   // Process location data passed from LocationPage
-  void _processSelectedLocation(Map<String, dynamic> locationData) async {
+  Future<void> _processSelectedLocation(Map<String, dynamic> locationData) async {
     setState(() {
       isLoadingLocation = true;
     });
 
     if (locationData.containsKey('coordinates') && locationData['coordinates'] != null) {
       final coordinates = locationData['coordinates'] as LatLng;
+
       setState(() {
         selectedCoordinates = coordinates;
-        currentLocation = {
-          'latitude': coordinates.latitude,
-          'longitude': coordinates.longitude,
-        };
-
-        // Update location name if provided
-        if (locationData.containsKey('name') && locationData['name'] != null) {
-          selectedLocationName = locationData['name'];
-        }
+        selectedLocationName = locationData['name'] ?? "Selected Location";
       });
 
-      // Get nearest named location and weather
+      // Save to SharedPreferences
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setDouble('selected_lat', coordinates.latitude);
+      await prefs.setDouble('selected_lng', coordinates.longitude);
+      await prefs.setString('selected_name', selectedLocationName!);
+
+      // Get nearest location and weather
       await _getNearestLocation(coordinates.latitude, coordinates.longitude);
       await _getWeatherForLocation(coordinates.latitude, coordinates.longitude);
 
       setState(() {
         isLoadingLocation = false;
       });
-    } else {
-      setState(() {
-        isLoadingLocation = false;
-      });
     }
   }
+
+
 
   // Get nearest named location using Google's Reverse Geocoding API
   Future<void> _getNearestLocation(double latitude, double longitude) async {
@@ -253,6 +411,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _getCurrentLocation() async {
+    if (selectedCoordinates != null) {
+      print("User has already selected a location. Skipping auto-location fetch.");
+      return; // Exit if user already selected a location
+    }
+
     try {
       setState(() {
         isLoadingLocation = true;
@@ -322,11 +485,11 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    // Process result when back from location page
     if (result != null && result is Map<String, dynamic>) {
       _processSelectedLocation(result);
     }
   }
+
 
   // Determine if it's currently daytime
   bool _isDaytime() {
@@ -392,6 +555,99 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<void> loadUserRecommendation(BuildContext context, String userId) async {
+    try {
+      // Get user data from either local storage or Firebase
+      final userData = await getUserData(userId);
+
+      // Generate recommendation based on user data
+      final recommendation = await generateEnergyRecommendation(userData);
+
+      // Update UI with recommendation
+      setState(() {
+        recommendationWidget = buildEnergyRecommendationText(recommendation);
+      });
+    } catch (e) {
+      // Handle errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Could not generate recommendation: $e")),
+      );
+    }
+  }
+
+  Widget buildEnergyRecommendationText(String recommendation) {
+    String displayText = recommendation == "solarpanels" ? "Solar Panels" : "Small Wind Turbine";
+    Color highlightColor = recommendation == "solarpanels" ? Colors.amber : Colors.blue;
+
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Recommended for Your Location",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF0B2732),
+            ),
+          ),
+          SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(color: Color(0xFF0B2732), fontSize: 16),
+                    children: [
+                      TextSpan(
+                        text: "Based on your location and energy profile, ",
+                      ),
+                      TextSpan(
+                        text: displayText,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: highlightColor,
+                        ),
+                      ),
+                      TextSpan(
+                        text: " is your best option! ",
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 5),
+          GestureDetector(
+            onTap: () {
+              // Navigate to explanation page or show dialog with more info
+              if (recommendation == "solarpanels") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SolarPanelSetupPage()),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const WindMillSetupPage()),
+                );
+              }
+            },
+            child: Text(
+              "Click to learn more about renewable options",
+              style: TextStyle(
+                decoration: TextDecoration.underline,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0B2732),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   // Energy saving item widget
   Widget _buildEnergySavingItem(IconData icon, String value, Color iconColor) {
     return Column(
@@ -645,37 +901,16 @@ class _HomePageState extends State<HomePage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Padding(
+                child: recommendationWidget ?? Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: RichText(
-                    text: TextSpan(
-                      style: TextStyle(color: Color(0xFF0B2732), fontSize: 16),
-                      children: [
-                        TextSpan(
-                          text: "Your location and energy profile suggest ",
-                        ),
-                        TextSpan(
-                          text: "Solar Panels",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0B2732),
-                          ),
-                        ),
-                        TextSpan(
-                          text: " as the best option! ",
-                        ),
-                        TextSpan(
-                          text: "Learn more",
-                          style: TextStyle(
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0B2732),
-                          ),
-                        ),
-                        TextSpan(
-                          text: " about the options below!",
-                        ),
-                      ],
+                  child: Center(
+                    child: SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF0B2732),
+                      ),
                     ),
                   ),
                 ),
@@ -695,69 +930,69 @@ class _HomePageState extends State<HomePage> {
                         MaterialPageRoute(builder: (context) => const SolarPanelSetupPage()),
                       );
                     },
-                      child: Container(
-                        width: 70,
-                        height: 90, // Increased height to accommodate text
-                        decoration: BoxDecoration(
-                          color: Color(0xFF0B2732),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.solar_power,
-                              color: Colors.amber,
-                              size: 40,
-                            ),
-                            const SizedBox(height: 5), // Space between icon and text
-                            const Text(
-                              'Solar',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                    child: Container(
+                      width: 70,
+                      height: 90, // Increased height to accommodate text
+                      decoration: BoxDecoration(
+                        color: Color(0xFF0B2732),
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.solar_power,
+                            color: Colors.amber,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 5), // Space between icon and text
+                          const Text(
+                            'Solar',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   InkWell(
                     onTap: () {
                       // Handle wind turbine option
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context)=>const WindmillSetupPage()),
+                        MaterialPageRoute(builder: (context)=>const WindMillSetupPage()),
                       );
                     },
-                      child: Container(
-                        width: 70,
-                        height: 90, // Increased height to accommodate text
-                        decoration: BoxDecoration(
-                          color: Color(0xFF0B2732),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.wind_power,
-                              color: Colors.blue,
-                              size: 40,
-                            ),
-                            const SizedBox(height: 5), // Space between icon and text
-                            const Text(
-                              'Wind',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
+                    child: Container(
+                      width: 70,
+                      height: 90, // Increased height to accommodate text
+                      decoration: BoxDecoration(
+                        color: Color(0xFF0B2732),
+                        borderRadius: BorderRadius.circular(10),
                       ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.wind_power,
+                            color: Colors.blue,
+                            size: 40,
+                          ),
+                          const SizedBox(height: 5), // Space between icon and text
+                          const Text(
+                            'Wind',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                   InkWell(
                     onTap: () {

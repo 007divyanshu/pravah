@@ -325,7 +325,7 @@ class _FootprintPageState extends State<FootprintPage> {
                         children: [
                           // Main Pie Chart Area
                           Expanded(
-                            flex: 3,
+                            flex: 2,
                             child: SizedBox(
                               height: 200,
                               child: _totalMonthlySavings <= 0
