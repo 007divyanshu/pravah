@@ -75,7 +75,7 @@ Built with Flutter for cross-platform functionality, Firebase for robust backend
 
 ### Direct Installation
 
-[Add download badge/link when available]
+[](https://drive.google.com/file/d/1sjnf4oGpTNt6UHEJSUYHBWy2yXvq1Nj0/view?usp=sharing)
 
 ### Manual Installation
 
