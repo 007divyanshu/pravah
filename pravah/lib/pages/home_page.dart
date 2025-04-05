@@ -25,14 +25,6 @@ import 'biomass_setup_page.dart';
 import 'geothermal_setup_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Add these at the top level of your file, outside any class
-String globaldailySolar = "0.0 kWh";
-String globaldailyWind = "0.0 kWh";
-String globaldailyBiomass = "0.0 kWh";
-String globaldailyGeothermal = "0.0 kWh";
-double globalCarbonFootprint = 0.0;
-
-
 class HomePage extends StatefulWidget {
   final Map<String, dynamic>? selectedLocation; // Updated to accept more location details
 
